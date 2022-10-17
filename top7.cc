@@ -11,7 +11,7 @@
 #include <cstdio>
 
 namespace {
-    enum rodzaj_linii { BLEDNA, NEW_MAX, TOP, GLOS };
+    enum rodzaj_linii { BLEDNA, NEW_MAX, TOP, GLOS, IGNORUJ};
     using numer_piosenki = int32_t;
     using liczba_glosow = size_t;
     using liczba_punktow = size_t;
@@ -26,13 +26,21 @@ namespace {
     std::unordered_map<numer_piosenki> wyniki_notowania;
 
     rodzaj_linii rozpoznaj_wejscie (const std::string& linia_wejscia) {
-        /**
-         *
-         */
+        std::regex IGNORUJ_regex (R"(\s*)");
+        std::regex NEW_MAX_regex (R"([ \r\t\f]*NEW[ \r\t\f]+[1-9]\d{0,7}\s*)");
+        std::regex TOP_regex (R"([ \r\t\f]*TOP\s*)");
+        std::regex GLOS_regex (R"(([ \r\t\f]*[1-9]\d{0,7})+\s*)");
+
+        if (std::regex_match(linia_wejscia, IGNORUJ_regex)) return IGNORUJ;
+        if (std::regex_match(linia_wejscia, NEW_MAX_regex)) return NEW_MAX;
+        if (std::regex_match(linia_wejscia, TOP_regex)) return TOP;
+        if (std::regex_match(linia_wejscia, GLOS_regex)) return GLOS;
+
+        return BLEDNA;
     }
 
     void wypisz_linie_bledu(const std::string& linia_wejscia, const size_t numer_linii) {
-        std::cerr << "Error in line" << numer_linii << ": " << input_line <<"/n";
+        std::cerr << "Error in line " << numer_linii << ": " << linia_wejscia <<"/n";
     }
 
     bool potwierdz_poprawnosc_glosu(const std::string& linia_wejscia, const size_t numer_linii) {
@@ -114,6 +122,8 @@ int main() {
                 } else {
                     wypisz_linie_bledu(linia_wejscia, numer_linii);
                 }
+                break;
+            case IGNORUJ:
                 break;
         }
     }
