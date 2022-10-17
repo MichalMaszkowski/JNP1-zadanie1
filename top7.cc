@@ -54,6 +54,20 @@ namespace {
         }
         return wynik;
     }
+
+    void zlicz_głos(const std::string& linia_wejscia) {
+        std::stringstream dane = stringstream(linia_wejscia);
+        numer_piosenki aktualna;
+        while (dane.peek() != EOF) {
+            dane >> aktualna;
+            if (wyniki_notowania.find(aktualna) == wyniki_notowania.end()) {
+                wyniki_notowania[aktualna] = 1;
+            } else {
+                ++(wyniki_notowania[aktualna]);
+            }
+        }
+        return;
+    }
 }
 
 int main() {
@@ -77,7 +91,7 @@ int main() {
                 break;
             case GLOS:
                 if (potwierdz_poprawnosc_glosu(linia_wejscia)) {
-                    zlicz_głos(linia_wejscia)
+                    zlicz_głos(linia_wejscia);
                 } else {
                     wypisz_linie_bledu(linia_wejscia, numer_linii);
                 }
