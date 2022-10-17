@@ -7,6 +7,8 @@
 #include <set>
 #include <unordered_set>
 #include <unordered_map>
+#include <sstream>
+#include <cstdio>
 
 namespace {
     enum rodzaj_linii { BLEDNA, NEW_MAX, TOP, GLOS };
@@ -21,16 +23,32 @@ namespace {
     std::set<numer_piosenki> top7_notowanie;
     std::set<numer_piosenki> top7_podsumowanie;
     std::unordered_set<numer_piosenki> wypadniete;
-    std::unordered_map<numer_piosenki> wyniki_notowania
+    std::unordered_map<numer_piosenki> wyniki_notowania;
 
-    rodzaj_linii rozpoznaj_wejscie (std::string linia_wejscia) {
+    rodzaj_linii rozpoznaj_wejscie (const std::string& linia_wejscia) {
         /**
          *
          */
     }
 
     void wypisz_linie_bledu(const std::string& linia_wejscia, const int numer_linii) {
-        std::cerr << "Error in line" << line_number << ": " << input_line;
+        std::cerr << "Error in line" << numer_linii << ": " << input_line <<"/n";
+    }
+
+    bool potwierdz_poprawnosc_glosu(const std::string& linia_wejscia, const int numer_linii) {
+        bool wynik = true;
+        std::stringstream dane = stringstream(linia_wejscia);
+        numer_piosenki aktualna;
+        std::unordered_set<numer_piosenki> tymczasowy_zbior;
+        while (wynik && (dane.peek() != EOF)) {
+            dane >> aktualna;
+            if (tymczasowy_zbior.find(aktualna) == tymczasowy_zbior.end()) {
+                tymczasowy_zbior.insert(aktualna);
+            } else {
+                wynik = false;
+            }
+        }
+        return wynik;
     }
 }
 
@@ -54,7 +72,7 @@ int main() {
                 wypisz_podsumowanie();
                 break;
             case GLOS:
-                if (sprawdz_poprawnosc_glosu(linia_wejscia)) {
+                if (potwierdz_poprawnosc_glosu(linia_wejscia)) {
                     zlicz_głos(linia_wejscia)
                 } else {
                     wypisz_linie_bledu(linia_wejscia, numer_linii);
