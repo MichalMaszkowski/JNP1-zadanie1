@@ -31,11 +31,11 @@ namespace {
          */
     }
 
-    void wypisz_linie_bledu(const std::string& linia_wejscia, const int numer_linii) {
+    void wypisz_linie_bledu(const std::string& linia_wejscia, const size_t numer_linii) {
         std::cerr << "Error in line" << numer_linii << ": " << input_line <<"/n";
     }
 
-    bool potwierdz_poprawnosc_glosu(const std::string& linia_wejscia, const int numer_linii) {
+    bool potwierdz_poprawnosc_glosu(const std::string& linia_wejscia, const size_t numer_linii) {
         bool wynik = true;
         std::stringstream dane = stringstream(linia_wejscia);
         numer_piosenki aktualna;
@@ -68,6 +68,24 @@ namespace {
         }
         return;
     }
+
+    void otworz_nowe_notowanie(const std::string& linia_wejscia, const size_t numer_linii, numer_piosenki* MAX) {
+        std::stringstream dane = stringstream(linia_wejscia);
+        numer_piosenki nowy_MAX;
+        std::string tymczas;
+        dane >> tymczas; //zjada "NEW"
+        dane >> tymczas; //zjada "MAX"
+        dane >> nowy_MAX;
+        if (nowy_MAX < MAX) {
+            wypisz_linie_bledu(linia_wejscia, numer_linii);
+        }
+        else {
+            MAX = nowy_MAX;
+            /*
+             *
+             */
+        }
+    }
 }
 
 int main() {
@@ -75,6 +93,7 @@ int main() {
     std::cin.tie();
 
     size_t numer_linii = 0;
+    numer_piosenki MAX = 0; //początkowo nie ma notowania, co jest równoważne temu, że żaden numer piosenki nie jest dopuszczalny
     std::string linia_wejscia;
 
     while(getline(std::cin, linia_wejscia)) {
@@ -84,7 +103,7 @@ int main() {
                 wypisz_linie_bledu(linia_wejscia, numer_linii);
                 break;
             case NEW_MAX:
-                otworz_nowe_notowanie(linia_wejscia);
+                otworz_nowe_notowanie(linia_wejscia, numer_linii, &MAX);
                 break;
             case TOP:
                 wypisz_podsumowanie();
