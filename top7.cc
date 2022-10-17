@@ -42,10 +42,14 @@ namespace {
         std::unordered_set<numer_piosenki> tymczasowy_zbior;
         while (wynik && (dane.peek() != EOF)) {
             dane >> aktualna;
-            if (tymczasowy_zbior.find(aktualna) == tymczasowy_zbior.end()) {
-                tymczasowy_zbior.insert(aktualna);
-            } else {
+            if (wypadniete.find(aktualna) != wypadniete.end()) {
                 wynik = false;
+            } else {
+                if (tymczasowy_zbior.find(aktualna) == tymczasowy_zbior.end()) {
+                    tymczasowy_zbior.insert(aktualna);
+                } else {
+                    wynik = false;
+                }
             }
         }
         return wynik;
