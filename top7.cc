@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <unordered_set>
+#include <map>
 #include <unordered_map>
 #include <sstream>
 #include <cstdio>
@@ -20,7 +21,7 @@ namespace {
     const numer_piosenki MAKSYMALNY_NUMER_PIOSENKI = 99999999;
 
 
-    std::set<numer_piosenki> top7_notowanie;
+    std::unordered_map<numer_piosenki, int> top7_notowanie;
     std::set<numer_piosenki> top7_podsumowanie;
     std::unordered_set<numer_piosenki> wypadniete;
     std::unordered_map<numer_piosenki> wyniki_notowania;
@@ -41,22 +42,27 @@ namespace {
 
     void wypisz_linie_bledu(const std::string& linia_wejscia, const size_t numer_linii) {
         std::cerr << "Error in line " << numer_linii << ": " << linia_wejscia <<"/n";
+        return;
     }
 
-    bool potwierdz_poprawnosc_glosu(const std::string& linia_wejscia, const size_t numer_linii) {
+    bool potwierdz_poprawnosc_glosu(const std::string& linia_wejscia, numer_piosenki MAX) {
         bool wynik = true;
         std::stringstream dane = stringstream(linia_wejscia);
         numer_piosenki aktualna;
         std::unordered_set<numer_piosenki> tymczasowy_zbior;
         while (wynik && (dane.peek() != EOF)) {
             dane >> aktualna;
-            if (wypadniete.find(aktualna) != wypadniete.end()) {
+            if ((aktualna > MAX) || (aktualna < MINIMALNY_NUMER_PIOSENKI)){
                 wynik = false;
             } else {
-                if (tymczasowy_zbior.find(aktualna) == tymczasowy_zbior.end()) {
-                    tymczasowy_zbior.insert(aktualna);
-                } else {
+                if (wypadniete.find(aktualna) != wypadniete.end()) {
                     wynik = false;
+                } else {
+                    if (tymczasowy_zbior.find(aktualna) != tymczasowy_zbior.end()) {
+                        wynik = false;
+                    } else {
+                        tymczasowy_zbior.insert(aktualna);
+                    }
                 }
             }
         }
@@ -77,6 +83,37 @@ namespace {
         return;
     }
 
+    void wypisz_notowanie () {
+        std::set<pair<liczba_glosow, numer piosenki>> zbior_sortujacy;
+        for ( auto iter = wyniki_notowania.begin(); iter != wyniki_notowania.end(); ++iter ) {
+            zbior_sortujacy.insert(std::make_pair (-(iter->second), iter->first)); //sortuje leksykograficznie pary (-l. glosow, nr. piosenki)
+        }
+        auto iter=zbior_sortujacy.begin();
+        int ktora = 1;
+        std::unordered_map<numer_piosenki, int> aktualne_notowanie;
+
+        while ((ktora <= 7) && (iter!=zbior_sortujacy.end())) {
+            nr_piosenki piosenka = (*iter)->second;
+            cout << piosenka << " "; // wypisuje nr piosenki
+            /*
+             * znalezc piosenke w ostanich top7
+             * top7_notowanie.find(piosenka)
+             * jesli nie ma to iterator [end] trzeba pororwnac
+             * jesli jest to sprawdzic ktora w kolejnosci byla w mapie
+             * porownac z ktora
+             * wypisac - lub liczbe
+             * wrzucic na aktualne_notowanie pare
+             */
+
+            ++ktora;
+            ++iter;
+        }
+        /*
+         * oczyscic top7
+         * wpisac do niego rzeczy z aktualnego notowania
+         */
+    }
+
     void otworz_nowe_notowanie(const std::string& linia_wejscia, const size_t numer_linii, numer_piosenki* MAX) {
         std::stringstream dane = stringstream(linia_wejscia);
         numer_piosenki nowy_MAX;
@@ -89,10 +126,12 @@ namespace {
         }
         else {
             MAX = nowy_MAX;
+            wypisz_notowanie();
             /*
              *
              */
         }
+        return;
     }
 }
 
@@ -117,7 +156,7 @@ int main() {
                 wypisz_podsumowanie();
                 break;
             case GLOS:
-                if (potwierdz_poprawnosc_glosu(linia_wejscia)) {
+                if (potwierdz_poprawnosc_glosu(linia_wejscia, MAX)) {
                     zlicz_głos(linia_wejscia);
                 } else {
                     wypisz_linie_bledu(linia_wejscia, numer_linii);
