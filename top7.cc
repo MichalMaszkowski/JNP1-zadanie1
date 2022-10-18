@@ -21,8 +21,8 @@ namespace {
     const numer_piosenki MAKSYMALNY_NUMER_PIOSENKI = 99999999;
 
 
-    std::unordered_map<numer_piosenki, int> top7_notowanie;
-    std::set<numer_piosenki> top7_podsumowanie;
+    std::unordered_map<numer_piosenki, int> top7_notowanie; //(piosenka, jej numer w ostatnim podsumowaniu)
+    std::unordered_map<numer_piosenki, liczba_punktow> top7_podsumowanie;
     std::unordered_set<numer_piosenki> wypadniete;
     std::unordered_map<numer_piosenki> wyniki_notowania;
 
@@ -96,7 +96,7 @@ namespace {
             nr_piosenki piosenka = (*iter)->second;
             cout << piosenka << " "; // wypisuje nr piosenki
             /*
-             * znalezc piosenke w ostanich top7
+             * znalezc piosenke w ostanich top7_notowanie
              * top7_notowanie.find(piosenka)
              * jesli nie ma to iterator [end] trzeba pororwnac
              * jesli jest to sprawdzic ktora w kolejnosci byla w mapie
@@ -108,9 +108,16 @@ namespace {
             ++ktora;
             ++iter;
         }
-        /*
-         * oczyscic top7
+        /* zobaczyc ktorych ze starego top7_notowanie nie ma w nowym
+         * wpsac te piosenki do wypadnietych
+         * oczyscic top7_notowanie
          * wpisac do niego rzeczy z aktualnego notowania
+         */
+    }
+
+    void zaktualizuj_punkty_podsumowaniowe(){
+        /*
+         * patrzy na nowe top7_notowanie i zwieksza punkty/dodaje pare
          */
     }
 
@@ -127,11 +134,17 @@ namespace {
         else {
             MAX = nowy_MAX;
             wypisz_notowanie();
-            /*
-             *
-             */
+            zaktualizuj_punkty_podsumowaniowe();
         }
         return;
+    }
+    void wypisz_podsumowanie() {
+        /*
+         * podobnie jak w wypisz notowanie (sortuje przez seta, porownuje miejsca)
+         * wpisuje na tymczasowa mape wypisywane
+         * przechodzi stara mape i jesli czegos nie ma w nowej ani w wypadnietych to dopisuje do nowej
+         * czysci stara mape i przepisuje do niej nowa
+         */
     }
 }
 
