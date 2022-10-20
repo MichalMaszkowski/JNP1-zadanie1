@@ -10,9 +10,10 @@
 #include <unordered_map>
 #include <sstream>
 #include <cstdio>
+#include <utility>
 
 namespace {
-    enum rodzaj_linii { BLEDNA, NEW_MAX, TOP, GLOS, IGNORUJ};
+    enum rodzaj_linii {BLEDNA, NEW_MAX, TOP, GLOS, IGNORUJ};
     using numer_piosenki = int32_t;
     using liczba_glosow = size_t;
     using liczba_punktow = size_t;
@@ -22,9 +23,9 @@ namespace {
 
 
     std::unordered_map<numer_piosenki, int> top7_notowanie; //(piosenka, jej numer w ostatnim podsumowaniu)
-    std::unordered_map<numer_piosenki, liczba_punktow> top7_podsumowanie;
+    std::unordered_map<numer_piosenki, std::pair<liczba_punktow, int>> top7_podsumowanie;
     std::unordered_set<numer_piosenki> wypadniete;
-    std::unordered_map<numer_piosenki> wyniki_notowania;
+    std::unordered_map<numer_piosenki, liczba_glosow> wyniki_notowania;
 
     rodzaj_linii rozpoznaj_wejscie (const std::string& linia_wejscia) {
         std::regex IGNORUJ_regex (R"(\s*)");
@@ -41,36 +42,27 @@ namespace {
     }
 
     void wypisz_linie_bledu(const std::string& linia_wejscia, const size_t numer_linii) {
-        std::cerr << "Error in line " << numer_linii << ": " << linia_wejscia <<"/n";
-        return;
+        std::cerr << "Error in line " << numer_linii << ": " << linia_wejscia <<"\n";
     }
 
     bool potwierdz_poprawnosc_glosu(const std::string& linia_wejscia, numer_piosenki MAX) {
-        bool wynik = true;
-        std::stringstream dane = stringstream(linia_wejscia);
+        std::stringstream dane = std::stringstream(linia_wejscia);
         numer_piosenki aktualna;
         std::unordered_set<numer_piosenki> tymczasowy_zbior;
-        while (wynik && (dane.peek() != EOF)) {
+        while (dane.peek() != EOF) {
             dane >> aktualna;
-            if ((aktualna > MAX) || (aktualna < MINIMALNY_NUMER_PIOSENKI)){
-                wynik = false;
-            } else {
-                if (wypadniete.find(aktualna) != wypadniete.end()) {
-                    wynik = false;
-                } else {
-                    if (tymczasowy_zbior.find(aktualna) != tymczasowy_zbior.end()) {
-                        wynik = false;
-                    } else {
-                        tymczasowy_zbior.insert(aktualna);
-                    }
-                }
-            }
+            if ((aktualna > MAX) || (aktualna < MINIMALNY_NUMER_PIOSENKI)) return false;
+            if (wypadniete.find(aktualna) != wypadniete.end()) return false;
+            if (tymczasowy_zbior.find(aktualna) != tymczasowy_zbior.end()) return false;
+
+            tymczasowy_zbior.insert(aktualna);
         }
-        return wynik;
+
+        return true;
     }
 
-    void zlicz_głos(const std::string& linia_wejscia) {
-        std::stringstream dane = stringstream(linia_wejscia);
+    void zlicz_glos(const std::string& linia_wejscia) {
+        std::stringstream dane = std::stringstream(linia_wejscia);
         numer_piosenki aktualna;
         while (dane.peek() != EOF) {
             dane >> aktualna;
@@ -80,64 +72,75 @@ namespace {
                 ++(wyniki_notowania[aktualna]);
             }
         }
-        return;
     }
 
     void wypisz_notowanie () {
-        std::set<pair<liczba_glosow, numer piosenki>> zbior_sortujacy;
-        for ( auto iter = wyniki_notowania.begin(); iter != wyniki_notowania.end(); ++iter ) {
-            zbior_sortujacy.insert(std::make_pair (-(iter->second), iter->first)); //sortuje leksykograficznie pary (-l. glosow, nr. piosenki)
+        std::set<std::pair<liczba_glosow, numer_piosenki>> zbior_sortujacy;
+        for (auto & iter : wyniki_notowania) {
+            zbior_sortujacy.insert(std::make_pair (-(iter.second), iter.first)); //Sortuje leksykograficznie pary (-l. glosow, nr. piosenki)
         }
-        auto iter=zbior_sortujacy.begin();
-        int ktora = 1;
+
+        int miejsce = 1;
         std::unordered_map<numer_piosenki, int> aktualne_notowanie;
 
-        while ((ktora <= 7) && (iter!=zbior_sortujacy.end())) {
-            nr_piosenki piosenka = (*iter)->second;
-            cout << piosenka << " "; // wypisuje nr piosenki
-            /*
-             * znalezc piosenke w ostanich top7_notowanie
-             * top7_notowanie.find(piosenka)
-             * jesli nie ma to iterator [end] trzeba pororwnac
-             * jesli jest to sprawdzic ktora w kolejnosci byla w mapie
-             * porownac z ktora
-             * wypisac - lub liczbe
-             * wrzucic na aktualne_notowanie pare
-             */
+        for (auto iter = zbior_sortujacy.begin(); iter != zbior_sortujacy.end() && miejsce < 8; ++iter) {
+            if (top7_notowanie.find(iter -> second) != top7_notowanie.end()) {
+                std::cout << iter -> second << " " << top7_notowanie[iter -> second] - miejsce << "\n";
+            }
+            else {
+                std::cout << iter -> second << " -\n";
+            }
 
-            ++ktora;
-            ++iter;
+            aktualne_notowanie.insert({iter -> second, miejsce});
+            miejsce++;
         }
+
+        for (auto & iter : top7_notowanie) {
+            if (aktualne_notowanie.find(iter.first) == aktualne_notowanie.end()) {
+                wypadniete.insert(iter.first);
+            }
+        }
+
+        wyniki_notowania.clear();
+        top7_notowanie.clear();
+        top7_notowanie = aktualne_notowanie;
         /* zobaczyc ktorych ze starego top7_notowanie nie ma w nowym
          * wpsac te piosenki do wypadnietych
          * oczyscic top7_notowanie
          * wpisac do niego rzeczy z aktualnego notowania
-         */
+        */
     }
 
-    void zaktualizuj_punkty_podsumowaniowe(){
+    void zaktualizuj_punkty_podsumowania(){
         /*
          * patrzy na nowe top7_notowanie i zwieksza punkty/dodaje pare
          */
+        for (auto & iter : top7_notowanie) {
+            if (top7_podsumowanie.find(iter.first) != top7_podsumowanie.end()) {
+                top7_podsumowanie[iter.first].first += 8 - iter.second;
+            }
+            else {
+                top7_podsumowanie.insert({iter.first, std::make_pair(8 - iter.second, 0)});
+            }
+        }
     }
 
     void otworz_nowe_notowanie(const std::string& linia_wejscia, const size_t numer_linii, numer_piosenki* MAX) {
-        std::stringstream dane = stringstream(linia_wejscia);
+        std::stringstream dane = std::stringstream(linia_wejscia);
         numer_piosenki nowy_MAX;
-        std::string tymczas;
-        dane >> tymczas; //zjada "NEW"
-        dane >> tymczas; //zjada "MAX"
+        std::string tymczasowy;
+        dane >> tymczasowy; //zjada "NEW"
         dane >> nowy_MAX;
-        if (nowy_MAX < MAX) {
+        if (nowy_MAX < *MAX) {
             wypisz_linie_bledu(linia_wejscia, numer_linii);
         }
         else {
-            MAX = nowy_MAX;
+            *MAX = nowy_MAX;
             wypisz_notowanie();
-            zaktualizuj_punkty_podsumowaniowe();
+            zaktualizuj_punkty_podsumowania();
         }
-        return;
     }
+
     void wypisz_podsumowanie() {
         /*
          * podobnie jak w wypisz notowanie (sortuje przez seta, porownuje miejsca)
@@ -145,6 +148,29 @@ namespace {
          * przechodzi stara mape i jesli czegos nie ma w nowej ani w wypadnietych to dopisuje do nowej
          * czysci stara mape i przepisuje do niej nowa
          */
+        std::set<std::pair<liczba_glosow, numer_piosenki>> zbior_sortujacy;
+        for (auto & iter : top7_podsumowanie) {
+            zbior_sortujacy.insert(std::make_pair (iter.second.first, -iter.first));
+        }
+
+        int pozycja = 1;
+        for (auto iter = zbior_sortujacy.rbegin(); iter != zbior_sortujacy.rend(); ++iter) {
+            if (pozycja < 8) {
+                auto iter_top7 = top7_podsumowanie.find(-iter -> second);
+                int poprzednia_pozycja = iter_top7 -> second.second;
+                if (poprzednia_pozycja != 0)
+                    std::cout << -iter -> second << " " << poprzednia_pozycja - pozycja << "\n";
+                else
+                    std::cout << -iter -> second << " -\n";
+                iter_top7->second.second = pozycja;
+                pozycja++;
+            }
+            else {
+                if (wypadniete.find(-iter -> second) != wypadniete.end()) {
+                    top7_podsumowanie.erase(top7_podsumowanie.find(-iter -> second));
+                }
+            }
+        }
     }
 }
 
@@ -170,8 +196,9 @@ int main() {
                 break;
             case GLOS:
                 if (potwierdz_poprawnosc_glosu(linia_wejscia, MAX)) {
-                    zlicz_głos(linia_wejscia);
-                } else {
+                    zlicz_glos(linia_wejscia);
+                }
+                else {
                     wypisz_linie_bledu(linia_wejscia, numer_linii);
                 }
                 break;
