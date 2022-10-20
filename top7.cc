@@ -1,9 +1,7 @@
 #include <iostream>
-#include <string>
 #include <cstdint>
 #include <algorithm>
 #include <regex>
-#include <vector>
 #include <set>
 #include <unordered_set>
 #include <map>
@@ -19,8 +17,6 @@ namespace {
     using liczba_punktow = size_t;
 
     const numer_piosenki MINIMALNY_NUMER_PIOSENKI = 1;
-    const numer_piosenki MAKSYMALNY_NUMER_PIOSENKI = 99999999;
-
 
     std::unordered_map<numer_piosenki, int> top7_notowanie; //(piosenka, jej numer w ostatnim podsumowaniu)
     std::unordered_map<numer_piosenki, std::pair<liczba_punktow, int>> top7_podsumowanie;
@@ -83,7 +79,6 @@ namespace {
     }
 
     void wypisz_notowanie () {
-        //printf("NOTOWANIE\n");
         std::set<std::pair<liczba_glosow, numer_piosenki>> zbior_sortujacy;
         for (auto & iter : wyniki_notowania) {
             zbior_sortujacy.insert(std::make_pair (-(iter.second), iter.first)); //Sortuje leksykograficznie pary (-l. glosow, nr. piosenki)
@@ -151,7 +146,6 @@ namespace {
     }
 
     void wypisz_podsumowanie() {
-        //printf("TOP\n");
         /*
          * podobnie jak w wypisz notowanie (sortuje przez seta, porownuje miejsca)
          * wpisuje na tymczasowa mape wypisywane
