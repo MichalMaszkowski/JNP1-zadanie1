@@ -179,6 +179,9 @@ namespace {
                 if (wypadniete.find(-iter -> second) != wypadniete.end()) {
                     top7_podsumowanie.erase(top7_podsumowanie.find(-iter -> second));
                 }
+                else {
+                    top7_podsumowanie.find(-iter -> second)->second.second = 0;
+                }
             }
         }
     }
