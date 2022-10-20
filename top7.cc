@@ -50,7 +50,11 @@ namespace {
         numer_piosenki aktualna;
         std::unordered_set<numer_piosenki> tymczasowy_zbior;
         while (dane.peek() != EOF) {
+            if (isspace(dane.get())) continue;
+            else dane.unget();
+
             dane >> aktualna;
+
             if ((aktualna > MAX) || (aktualna < MINIMALNY_NUMER_PIOSENKI)) return false;
             if (wypadniete.find(aktualna) != wypadniete.end()) return false;
             if (tymczasowy_zbior.find(aktualna) != tymczasowy_zbior.end()) return false;
@@ -65,7 +69,11 @@ namespace {
         std::stringstream dane = std::stringstream(linia_wejscia);
         numer_piosenki aktualna;
         while (dane.peek() != EOF) {
+            if (isspace(dane.get())) continue;
+            else dane.unget();
+
             dane >> aktualna;
+
             if (wyniki_notowania.find(aktualna) == wyniki_notowania.end()) {
                 wyniki_notowania[aktualna] = 1;
             } else {
@@ -75,6 +83,7 @@ namespace {
     }
 
     void wypisz_notowanie () {
+        //printf("NOTOWANIE\n");
         std::set<std::pair<liczba_glosow, numer_piosenki>> zbior_sortujacy;
         for (auto & iter : wyniki_notowania) {
             zbior_sortujacy.insert(std::make_pair (-(iter.second), iter.first)); //Sortuje leksykograficznie pary (-l. glosow, nr. piosenki)
@@ -142,6 +151,7 @@ namespace {
     }
 
     void wypisz_podsumowanie() {
+        //printf("TOP\n");
         /*
          * podobnie jak w wypisz notowanie (sortuje przez seta, porownuje miejsca)
          * wpisuje na tymczasowa mape wypisywane
